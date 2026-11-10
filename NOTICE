@@ -1,0 +1,14 @@
+Live Union
+Copyright (C) 2026 fishpot9
+
+The original Live Union source code is licensed under the GNU General Public
+License, version 3 only (SPDX-License-Identifier: GPL-3.0-only).
+See LICENSE for the complete license and SOURCE_CODE.md for corresponding source
+and build instructions.
+
+Third-party components retain their own copyrights and licenses.
+See THIRD_PARTY_NOTICES.md and the unmodified Electron LICENSE and
+LICENSES.chromium.html supplied with Windows distributions.
+
+Live Union is an independent desktop project. The supported streaming services
+are third-party services; no affiliation or endorsement is implied.

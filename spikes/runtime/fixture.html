@@ -1,0 +1,9 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><title>本地原生层测试</title><style>
+body{margin:0;background:#102c3d;color:#e9f4ff;font:16px sans-serif}main{padding:14px}canvas{width:100%;max-height:65vh;object-fit:contain;background:#090d13}input{padding:8px;width:70%}button{padding:8px}#count{font-size:24px}
+</style></head><body><main><strong>本地 fixture（不是平台兼容证据）</strong><p id="count">点击 0 次</p><button id="hit">命中测试</button><button id="popup">测试同会话弹窗</button><button id="tone">测试音（用户点击启动）</button><p><input id="input" placeholder="本地输入测试，不会发送" aria-label="本地输入测试"></p><canvas width="960" height="540"></canvas></main><script>
+let clicks=0;document.querySelector('#hit').onclick=()=>document.querySelector('#count').textContent=`点击 ${++clicks} 次`;
+document.querySelector('#popup').onclick=()=>window.open(location.href,'fixture-popup','width=600,height=450');
+document.querySelector('#tone').onclick=()=>{const a=new AudioContext();const o=a.createOscillator();const g=a.createGain();g.gain.value=.05;o.frequency.value=440;o.connect(g).connect(a.destination);o.start();setTimeout(()=>a.close(),3000)};
+const c=document.querySelector('canvas'),ctx=c.getContext('2d');let frames=0;window.fixture={get clicks(){return clicks},get frames(){return frames},boot:performance.now()};
+function draw(){frames++;ctx.fillStyle='#142f46';ctx.fillRect(0,0,960,540);ctx.strokeStyle='#ffcf63';ctx.lineWidth=12;ctx.strokeRect(6,6,948,528);ctx.fillStyle='white';ctx.font='28px sans-serif';ctx.fillText('16:9 完整边缘 / 本地动画 '+frames,30,70);ctx.fillStyle='#78dcbb';ctx.fillRect((frames*3)%900,220,60,60);requestAnimationFrame(draw)}draw();
+</script></body></html>

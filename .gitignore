@@ -1,0 +1,23 @@
+node_modules/
+dist/
+release/
+test-results/
+playwright-report/
+.local/
+*.log
+*.pftrace
+*.tmp
+*.bak
+/Sessions/
+Partitions/
+Cookies*
+Local Storage/
+Session Storage/
+Config/
+Diagnostics/
+Local State
+Login Data*
+Network/
+.env
+.env.*
+!.env.example

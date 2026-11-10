@@ -1,0 +1,37 @@
+{
+  "name": "live-union",
+  "version": "0.1.0-dev.10",
+  "private": true,
+  "type": "module",
+  "description": "Local multi-platform live viewing workspace",
+  "author": "fishpot9",
+  "license": "GPL-3.0-only",
+  "repository": { "type": "git", "url": "https://github.com/fishpotdev9/live-union.git" },
+  "engines": { "node": ">=24.12.0 <25" },
+  "main": "dist/main.cjs",
+  "scripts": {
+    "runtime:prepare": "node scripts/prepare-electron-archive.cjs",
+    "runtime:install": "node scripts/install-electron-archive.cjs",
+    "g0": "electron spikes/runtime/main.cjs",
+    "g0:fixture": "electron spikes/runtime/main.cjs --fixture",
+    "g0:test": "electron spikes/runtime/main.cjs --fixture --self-test",
+    "build": "node scripts/build.cjs",
+    "start": "electron .",
+    "test:app": "electron . --self-test",
+    "test:cycles": "electron . --self-test --self-test-cycles",
+    "test:package": "node scripts/test-package.cjs",
+    "package:check": "node scripts/package/index.cjs --check-only",
+    "package": "node scripts/package/index.cjs --package",
+    "check": "node --check spikes/runtime/main.cjs && node --check spikes/runtime/preload.cjs && node --check spikes/runtime/chrome.js",
+    "test:unit": "node scripts/test-unit.cjs",
+    "test:huya:css": "node scripts/test-huya-native.cjs",
+    "test:douyu:css": "node scripts/test-douyu-native.cjs",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@electron/packager": "20.3.0",
+    "electron": "45.2.3",
+    "esbuild": "0.28.2",
+    "typescript": "7.0.2"
+  }
+}
