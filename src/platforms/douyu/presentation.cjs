@@ -1,9 +1,9 @@
 'use strict';
 
-// Douyu presentation adapter 2026.11.07.3. Fixed packaged source only.
+// Douyu presentation adapter 2026.11.21.1. Fixed packaged source only.
 function probe(prefs) {
   'use strict';
-  const version = '2026.11.07.3';
+  const version = '2026.11.21.1';
   const key = Symbol.for('live-union.douyu.presentation.state');
   const previous = window[key];
   const result = (status, reason, extra = {}) => {
@@ -119,9 +119,16 @@ function probe(prefs) {
     const parentBox = node.parentElement.getBoundingClientRect();
     scrollChain.push({ node, widthGap: parentBox.width - box.width, heightGap: parentBox.height - box.height });
   }
-  if (scrollChain.length !== 4 || scrollChain[3].node.parentElement !== barrage ||
+  // Native samples have either three wrappers (2026-11-21) or the original
+  // four, with the same bounded scrollbar/viewport compensation. Unknown
+  // depths remain unsupported; hidden chat does not bypass these checks.
+  if (![3, 4].includes(scrollChain.length) || scrollChain.at(-1).node.parentElement !== barrage ||
       scrollChain.some(item => !Number.isFinite(item.widthGap) || !Number.isFinite(item.heightGap) ||
         item.widthGap < -24 || item.widthGap > 160 || item.heightGap < -24 || item.heightGap > 160)) return result('unsupported', 'native-scroll-geometry');
+  // Connectivity alone misses a platform moving an old wrapper elsewhere
+  // inside the aside. Retain every edge before writing any compact styles.
+  const chatParents = new Map([barrage, ...barrageChain, list, ...scrollChain.map(item => item.node), chat, input]
+    .map(node => [node, node.parentElement]));
   const videoChain = [];
   for (let node = video.parentElement; node && node !== player && videoChain.length < 12; node = node.parentElement) {
     videoChain.push(node);
@@ -206,6 +213,7 @@ function probe(prefs) {
         [...rootParents].some(([node, parent]) => node.parentElement !== parent || !sdk.contains(node) || !semanticNow.has(node)) ||
         [...sdkPaths].some(([node, parent]) => !node.isConnected || node.parentElement !== parent) ||
         [...videoParents].some(([node, parent]) => node.parentElement !== parent) ||
+        [...chatParents].some(([node, parent]) => !node.isConnected || node.parentElement !== parent || !aside.contains(node)) ||
         !aside.contains(list) || !aside.contains(chat) || !chat.contains(input) || !player.contains(video) ||
         list.parentElement !== scrollChain[0].node || video.parentElement !== (videoChain[0] || player) ||
         [...barrageChain, ...scrollChain.map(item => item.node), ...videoChain].some(node => !node.isConnected)) return fail('structure-changed');

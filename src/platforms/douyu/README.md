@@ -1,6 +1,6 @@
 # Douyu presentation adapter
 
-Version: `2026.11.07.3`. Contract: ADR002 / `PlatformPresentation` in `src/shared/app-contracts.ts`.
+Version: `2026.11.21.1`. Contract: ADR002 / `PlatformPresentation` in `src/shared/app-contracts.ts`.
 
 `index.ts` exports `adapter`; its CJS implementation and exact `.d.cts` declaration are colocated so TypeScript and esbuild can statically import the fixed packaged builder. There are no runtime imports from G0 probes, no dependencies to install, and no public contract changes.
 
@@ -10,9 +10,9 @@ The adapter only constructs fixed page scripts from three validated presentation
 
 - Video root: `#js-player-video`, with one geometrically visible native video and a bounded ancestor sizing chain.
 - Native frame: the video's immediate parent must contain the video root and a unique SDK sibling; extra branches must remain inert (zero area, no video/editable/danmu/aside) and may naturally be removed. The SDK branch must have local `danmu` / `Danmu` semantic DIV roots, matching native video-root geometry, no independent video and no aside. Its own native editors/settings remain attached and unread. A global class match never makes a branch retained.
-- The complete native frame is retained. Version `.2` incorrectly hid the SDK sibling that owns native controls and DOM danmu renderers; the anonymous real-page diagnosis is recorded in `docs/evidence/integration/2026-11-07-douyu-diagnosis.md`.
+- The complete native frame is retained. Version `.2` incorrectly hid the SDK sibling that owns native controls and DOM danmu renderers; the anonymous real-page diagnosis is recorded in `docs/compatibility.md`.
 - Chat common root: `#js-player-asideMain`, containing both `.Barrage` / `#js-barrage-list` history and `.layout-Player-chat` with one native editable element.
-- The history UL remains unchanged; four observed wrapper levels preserve native scrollbar dimension differences. Message text and input values are never inspected.
+- The history UL remains unchanged; the three wrapper levels observed on 2026-11-21 and the previous four-level structure preserve measured native scrollbar dimension differences. Other depths or out-of-bound/nonfinite gaps are rejected. Every retained chat parent-child edge is checked again on updates. Message text and input values are never inspected.
 - The native frame, aside and their descendants stay attached. Only ordinary sibling branches outside their ancestor paths are hidden; script/style/link/meta/template/noscript nodes are preserved. Up to 512 sibling elements are examined per application.
 - Page-root scrollbars are released before measuring the viewport. Frame/aside ancestor stacking contexts are raised; the video is not raised above the SDK. All changed inline properties are recorded independently for rollback.
 
@@ -40,14 +40,14 @@ Custom nonsemantic login/global portals outside the retained paths can be hidden
 
 ```powershell
 node --check src/platforms/douyu/presentation.cjs
-node --test tests/unit/douyu/presentation.test.cjs tests/unit/douyu/adapter.test.ts
+node --test tests/unit/douyu/*.test.cjs tests/unit/douyu/adapter.test.ts
 node node_modules/typescript/bin/tsc --noEmit --incremental false
 ```
 
-All pass; 25 unit tests cover validated source generation, exports, idempotence, identity/parent retention, independent chat, native hidden roots, explicit contain geometry for 16:9/4:3/portrait sources, small layouts, structure ambiguity, real-box postcheck failure, metadata changes, root/class/path loss, inert frame siblings, native SDK editors, cleanup and normalized CSSOM rollback. Mock playback/audio/source/current-time accessors and input-value accessors throw; only intrinsic media dimensions are read. The fixture models basic box arithmetic and the observed video/SDK sibling relationship. It cannot prove Chromium layout, painting, event hit testing or real-platform compatibility. Main-agent hidden Chromium, anonymous real-page and dev.5 desktop results are recorded in `docs/evidence/integration/2026-11-07-douyu-dev5-fix.md`.
+All pass; 31 unit tests cover validated source generation, exports, idempotence, identity/parent retention, independent chat, native hidden roots, explicit contain geometry for 16:9/4:3/portrait sources, small layouts, structure ambiguity, real-box postcheck failure, metadata changes, root/class/path loss, inert frame siblings, native SDK editors, cleanup and normalized CSSOM rollback. Three- and four-layer scroll chains include fractional gaps, hidden-to-visible chat and connected wrapper replacement/reparenting. Mock playback/audio/source/current-time accessors and input-value accessors throw; only intrinsic media dimensions are read. The fixture models basic box arithmetic and the observed video/SDK sibling relationship. It cannot prove Chromium layout, painting, event hit testing or real-platform compatibility. Main-agent 2026-11-21 regression evidence is in `docs/verification-dev11.md`; the previous dev.5 results remain in `docs/compatibility.md`.
 
 ## Requirements and remaining verification
 
 Implementation targets FR05, FR13, FR15, FR20–22, FR28, NFR03, NFR06 and NFR08; tests prepare AT08–13, AT17, AT24–25 and AT28. They do not establish real-platform acceptance.
 
-Production `.3` real-page root alignment, menu boundaries/hit testing, actual source corners, small-window occlusion, native scroll interaction, IME, approved sending, native overlay/login return, DPI, same-platform multiroom preferences and nine-room performance remain unverified by this module author. The main agent owns those serial tests and formal evidence. This task read the specifically authorized numeric anonymous diagnosis; it did not run Electron, use the desktop/network, open a live app/session or touch the current release. The separately reported login/reload issue is not explained or repaired by this presentation change.
+The current version has bounded anonymous live-page and existing-session visual evidence recorded in `docs/verification-dev11.md`. Login/entitlements, all native menus and input modes, every platform state, and nine-room sustained performance are not established by the module tests. Unknown media structures still restore the native page. The historical login/reload issue is not explained or repaired by this presentation change.

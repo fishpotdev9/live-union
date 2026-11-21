@@ -1,6 +1,6 @@
 {
   "name": "live-union",
-  "version": "0.1.0-dev.10",
+  "version": "0.1.0-dev.11",
   "private": true,
   "type": "module",
   "description": "Local multi-platform live viewing workspace",

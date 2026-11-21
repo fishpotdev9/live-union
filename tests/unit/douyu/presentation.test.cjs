@@ -143,7 +143,7 @@ test('version changes dispose the old closure and install the packaged implement
   assert.equal(run(item).status, 'applied');
   assert.equal(disposed, 1);
   assert.equal(updated, 0);
-  assert.equal(state(item).version, '2026.11.07.3');
+  assert.equal(state(item).version, '2026.11.21.1');
   const original = state(item);
   original.version = '2026.11.06.9';
   assert.equal(run(item).status, 'applied');

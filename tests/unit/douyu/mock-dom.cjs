@@ -64,7 +64,7 @@ class Element {
     };
   }
 }
-function fixture(scrollbars = false) {
+function fixture(scrollbars = false, scrollDepth = 4) {
   const html = new Element(null, 1280, 720);
   html.clientWidth = 1280;
   html.clientHeight = 720;
@@ -111,11 +111,17 @@ function fixture(scrollbars = false) {
   const outer = new Element(aside, 380, 507);
   const middle = new Element(outer, 380, 283);
   const barrage = new Element(middle, 380, 283);
-  const branch = new Element(barrage, 380, 283);
-  const wrap = new Element(branch, 380, 237);
-  const viewport = new Element(wrap, 380, 237);
-  const content = new Element(viewport, 395, 252);
-  const list = new Element(content, 380, 956);
+  // Outer to inner: the current three-layer sample has gaps (0,0),
+  // (0,46), (0,0) when read upward; the original fourth wrapper adds
+  // native 15px scrollbar compensation. Other depths are negative samples.
+  const scrollSizes = [[380, 283], [380, 237], [380, 237], [395, 252], [395, 252]];
+  const scrollWrappers = [];
+  let scrollParent = barrage;
+  for (let index = 0; index < scrollDepth; index++) {
+    scrollParent = new Element(scrollParent, ...scrollSizes[Math.min(index, scrollSizes.length - 1)]);
+    scrollWrappers.push(scrollParent);
+  }
+  const list = new Element(scrollParent, 380, 956);
   const chat = new Element(aside, 380, 89);
   const input = new Element(chat, 237, 42);
   input.tagName = 'TEXTAREA';
@@ -167,8 +173,8 @@ function fixture(scrollbars = false) {
     cancelAnimationFrame(id) { frames.delete(id); }
   });
   const flush = map => { const [id, callback] = map.entries().next().value; map.delete(id); callback(); };
-  return { context, window, document, events, observers, timers, frames, frame, player, sdk, sdkChain, danmu, fixedDanmu, danmuMessage, aside, chat, list, input, video, header, main, navAside, nativeControl, resources,
+  return { context, window, document, events, observers, timers, frames, frame, player, sdk, sdkChain, danmu, fixedDanmu, danmuMessage, aside, chat, list, input, video, header, main, navAside, nativeControl, resources, barrage, barrageChain: [middle, outer], scrollWrappers,
     flushTimer: () => flush(timers), flushFrame: () => flush(frames),
-    nodes: [html, body, header, main, navAside, ...resources, frame, player, mediaParent, video, sdk, ...sdkChain, danmu, fixedDanmu, danmuMessage, nativeControl, aside, outer, middle, barrage, branch, wrap, viewport, content, list, chat, input] };
+    nodes: [html, body, header, main, navAside, ...resources, frame, player, mediaParent, video, sdk, ...sdkChain, danmu, fixedDanmu, danmuMessage, nativeControl, aside, outer, middle, barrage, ...scrollWrappers, list, chat, input] };
 }
 module.exports = { fixture, Element };

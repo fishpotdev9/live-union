@@ -47,6 +47,12 @@ html,body{margin:0;min-width:1200px}#outside-header{height:60px;background:white
 .Barrage{width:380px;height:283px}#scroll-a{width:380px;height:283px}#scroll-b{width:380px;height:237px}#scroll-c{width:380px;height:237px}#scroll-d{width:395px;height:252px}#js-barrage-list{width:380px;height:900px}
 .layout-Player-chat{height:89px;width:380px}textarea{width:237px;height:42px}
 </style></head><body><header id="outside-header"></header><main><div id="native-frame"><div id="js-player-video"><div id="media-wrapper"><video></video></div></div><div id="sdk-peer"><div id="sdk-a"><div id="sdk-b"><div class="danmu-root"><div class="danmu-message"></div></div><div class="DanmuAdvanced"></div><div id="native-controls"><button type="button" id="native-quality"></button></div></div></div></div></div><aside id="js-player-asideMain"><div id="history-outer"><div id="history-mid"><div class="Barrage"><div id="scroll-a"><div id="scroll-b"><div id="scroll-c"><div id="scroll-d"><ul id="js-barrage-list"></ul></div></div></div></div></div></div></div><div class="layout-Player-chat"><textarea></textarea></div></aside></main></body></html>`;
+// Reconstructed from bounded anonymous 2026-11-21 measurements: three native
+// wrappers, [0,46,0] height gaps, with the innermost scrolling viewport. This is
+// synthetic markup, not a stored platform page or account compatibility proof.
+const threeLayerMarkup=markup
+  .replace('<div id="scroll-d"><ul id="js-barrage-list"></ul></div>','<ul id="js-barrage-list"></ul>')
+  .replace('</style>','#scroll-a{display:flex;position:relative}#scroll-b{position:relative;overflow:hidden}#scroll-c{overflow-x:hidden;overflow-y:auto}</style>');
 const probe=`(() => {const box=n=>{const r=n.getBoundingClientRect();return{x:r.x,y:r.y,width:r.width,height:r.height}};const q=s=>document.querySelector(s),video=q('video'),peer=q('#sdk-peer'),danmu=q('.danmu-root'),button=q('#native-quality'),b=button.getBoundingClientRect();return {result:globalThis[Symbol.for('live-union.presentation.result')],viewport:{width:innerWidth,height:innerHeight},video:box(video),player:box(q('#js-player-video')),sdk:box(peer),danmu:box(danmu),sameVideo:video===globalThis.fixture.video,sameSdk:peer===globalThis.fixture.peer,parentsPreserved:video.parentElement===globalThis.fixture.videoParent&&danmu.parentElement===globalThis.fixture.danmuParent,danmuDisplay:getComputedStyle(danmu).display,advancedDisplay:getComputedStyle(q('.DanmuAdvanced')).display,nativeControlHit:document.elementFromPoint(b.x+b.width/2,b.y+b.height/2)===button,rootHidden:getComputedStyle(q('#outside-header')).display==='none',chatDisplay:getComputedStyle(q('#js-player-asideMain')).display,inlineRestored:[q('#native-frame'),q('#js-player-video'),peer,q('#sdk-a'),q('#sdk-b'),danmu,q('.DanmuAdvanced')].every(n=>n.style.cssText===globalThis.fixture.styles.get(n))};})()`;
 (async()=>{
   const profile=path.resolve(process.argv.find(a=>a.startsWith('--profile='))?.slice(10)||'');
@@ -56,8 +62,8 @@ const probe=`(() => {const box=n=>{const r=n.getBoundingClientRect();return{x:r.
   const view=new BrowserWindow({show:false,width:1280,height:720,useContentSize:true,webPreferences:{session:isolated,nodeIntegration:false,contextIsolation:true,sandbox:true,webSecurity:true,backgroundThrottling:false,offscreen:true}});
   const scenarios=[];
   try{
-    for(const [width,height,chatVisible] of [[1280,720,false],[703,272,false],[524,272,true],[220,140,false]]){
-      view.setContentSize(width,height);await view.loadURL('data:text/html;charset=utf-8,'+encodeURIComponent(markup));
+    for(const [scrollLayers,html] of [[4,markup],[3,threeLayerMarkup]]) for(const [width,height,chatVisible] of [[1280,720,false],[703,272,false],[524,272,true],[220,140,false]]){
+      view.setContentSize(width,height);await view.loadURL('data:text/html;charset=utf-8,'+encodeURIComponent(html));
       await view.webContents.executeJavaScript(`globalThis.fixture={video:document.querySelector('video'),peer:document.querySelector('#sdk-peer'),videoParent:document.querySelector('video').parentElement,danmuParent:document.querySelector('.danmu-root').parentElement,styles:new Map([...document.querySelectorAll('*')].map(n=>[n,n.style.cssText]))};Object.defineProperties(globalThis.fixture.video,{videoWidth:{value:1920},videoHeight:{value:1080}});`);
       await view.webContents.executeJavaScript(`globalThis.fixture.sdkStyleMutations=0;new MutationObserver(records=>{globalThis.fixture.sdkStyleMutations+=records.length}).observe(globalThis.fixture.peer,{attributes:true,attributeFilter:['style']})`);
       const prefs={compact:true,chatVisible,chatWidthDip:380};await view.webContents.executeJavaScript(build(prefs));await wait(200);
@@ -68,13 +74,17 @@ const probe=`(() => {const box=n=>{const r=n.getBoundingClientRect();return{x:r.
       const hidden=await view.webContents.executeJavaScript(probe);
       await view.webContents.executeJavaScript(`document.querySelector('.danmu-root').style.removeProperty('display')`);await wait(200);
       const visibleAgain=await view.webContents.executeJavaScript(probe);
+      let nativeScroll=null;
+      if(chatVisible&&scrollLayers===3){
+        nativeScroll=await view.webContents.executeJavaScript(`(() => {const viewport=document.querySelector('#scroll-c'),list=document.querySelector('#js-barrage-list'),input=document.querySelector('textarea');viewport.scrollTop=50;return {viewportHeight:viewport.clientHeight,scrollHeight:viewport.scrollHeight,scrollTop:viewport.scrollTop,overflow:getComputedStyle(viewport).overflowY,listUnchanged:list.style.cssText==='',inputUnchanged:input.style.cssText===''};})()`);
+      }
       await view.webContents.executeJavaScript(build({...prefs,compact:false}));await wait(50);
       const restored=await view.webContents.executeJavaScript(probe);
       restored.styleDifferences=await view.webContents.executeJavaScript(`['#native-frame','#js-player-video','#sdk-peer','#sdk-a','#sdk-b','.danmu-root','.DanmuAdvanced'].map(selector=>{const n=document.querySelector(selector);return {selector,before:globalThis.fixture.styles.get(n),after:n.style.cssText}}).filter(n=>n.before!==n.after)`);
-      scenarios.push({requested:{width,height,chatVisible},applied,hidden,visibleAgain,restored});
+      scenarios.push({requested:{width,height,chatVisible,scrollLayers},applied,hidden,visibleAgain,nativeScroll,restored});
     }
     console.log(marker+JSON.stringify({kind:'hidden-local-douyu-css',realPlatforms:false,mediaIntrinsicSynthetic:true,hiddenWindow:!view.isVisible(),offscreen:view.webContents.isOffscreen(),electron:process.versions.electron,chromium:process.versions.chrome,implementationSha256:crypto.createHash('sha256').update(await fs.readFile(path.resolve(__dirname,'../src/platforms/douyu/presentation.cjs'))).digest('hex'),scenarios}));
-    for(const {requested,applied,hidden,visibleAgain,restored} of scenarios){
+    for(const {requested,applied,hidden,visibleAgain,nativeScroll,restored} of scenarios){
       assert.equal(applied.result.status,'applied');assert.equal(applied.sameVideo,true);assert.equal(applied.sameSdk,true);assert.equal(applied.parentsPreserved,true);
       assert.equal(applied.idleSdkStyleMutations,0,'stable viewport must not repeatedly mutate SDK styles');
       const near=(a,b)=>Math.abs(a-b)<=1;for(const key of ['x','y','width','height']){assert(near(applied.video[key],applied.sdk[key]));assert(near(applied.video[key],applied.danmu[key]));}
@@ -82,6 +92,7 @@ const probe=`(() => {const box=n=>{const r=n.getBoundingClientRect();return{x:r.
       assert.equal(applied.chatDisplay,requested.chatVisible?'block':'none');assert.equal(applied.nativeControlHit,true);
       assert.equal(hidden.result.status,'applied');assert.equal(hidden.danmuDisplay,'none');assert.equal(visibleAgain.result.status,'applied');assert(visibleAgain.danmu.width>0);
       assert.equal(restored.result.status,'restored');assert.equal(restored.inlineRestored,true);
+      if(nativeScroll){assert(nativeScroll.viewportHeight>0);assert(nativeScroll.scrollHeight>nativeScroll.viewportHeight);assert.equal(nativeScroll.scrollTop,50);assert.equal(nativeScroll.overflow,'auto');assert.equal(nativeScroll.listUnchanged,true);assert.equal(nativeScroll.inputUnchanged,true);}
     }
   }finally{view.destroy();}
 })().then(()=>app.exit(0),()=>app.exit(1));
